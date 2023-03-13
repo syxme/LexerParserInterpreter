@@ -16,7 +16,7 @@ fun main(args: Array<String>) {
     env.declareVar("null", NullVal(), true)
 
 
-    val program = Parser().produceAst(getResourceString("source.txt"))
+    val program = Parser().produceAst(getResourceString("source.js"))
     val reslt = Interpreter().evaluate(program,env)
     println("result = $reslt")
     val input = Scanner(System.`in`)
@@ -33,7 +33,7 @@ fun main(args: Array<String>) {
 
 private fun getResourceString(name: String):String{
     val classloader = Thread.currentThread().getContextClassLoader();
-    return convertInputStreamToString(classloader.getResourceAsStream("source.txt"))
+    return convertInputStreamToString(classloader.getResourceAsStream("source.js"))
 }
 @Throws(IOException::class)
 private fun convertInputStreamToString(`is`: InputStream): String {
