@@ -97,6 +97,8 @@ class Lexer {
                             num += c
                         }
                         position--
+
+
                         tokens.add(Token(num, TokenType.Number))
                     } else if (c.isLetter()) {
                         var ident = c.toString()
