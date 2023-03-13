@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="CompileAndRun" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="MainKt" />
+    <module name="LexerParser_Interpriter.main" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
