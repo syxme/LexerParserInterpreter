@@ -24,6 +24,7 @@ fun main(args: Array<String>) {
         val line: String = input.nextLine()
         val program = Parser().produceAst(line)
         val reslt = Interpreter().evaluate(program,env)
+        println("program = $program")
         println("result = $reslt")
     }
 

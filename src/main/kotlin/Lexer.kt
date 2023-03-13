@@ -34,6 +34,16 @@ class Lexer {
         }
         return source[position+1] == char
     }
+    fun goToNextLine(){
+        while (next()){
+            if (c == '\r' && isNext('\n')){
+                next()
+                break
+            }else if (c == '\n'){
+                break
+            }
+        }
+    }
 
     fun tokenize(sourceCode: String): ArrayList<Token> {
         val tokens = ArrayList<Token>()
@@ -56,6 +66,7 @@ class Lexer {
                 '}' -> {
                     tokens.add(Token(c.toString(), TokenType.CloseBrace))
                 }
+
                 '>' -> {
                     if (isNext('>')){
                         next()
@@ -74,7 +85,12 @@ class Lexer {
                     }
                 }
                 '+', '-', '*', '/', '%' -> {
-                    tokens.add(Token(c.toString(), TokenType.BinaryOperator))
+                    if (isNext('/')){
+                        goToNextLine()
+                        continue
+                    }else{
+                        tokens.add(Token(c.toString(), TokenType.BinaryOperator))
+                    }
                 }
 
                 '=' -> {
@@ -83,8 +99,16 @@ class Lexer {
                 ':' -> {
                     tokens.add(Token(c.toString(), TokenType.Colon))
                 }
+
+                '\n' ->{
+                    tokens.add(Token(c.toString(), TokenType.LineTerminatorSequence))
+                }
+
                 ';' -> {
-                    tokens.add(Token(c.toString(), TokenType.SemiColon))
+
+                    if (tokens.get(tokens.size-1).type != TokenType.SemiColon) {
+                        tokens.add(Token(c.toString(), TokenType.SemiColon))
+                    }
                 }
                 ',' -> {
                     tokens.add(Token(c.toString(), TokenType.Comma))

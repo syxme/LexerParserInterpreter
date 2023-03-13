@@ -1,4 +1,4 @@
-let foo = 50 / 2;
+let foo = 50 / 2
 
 let obj = {
   x: 100,
@@ -7,7 +7,7 @@ let obj = {
   complex: {
     bar: true,
   },
-};
+}
 
-let f = object.complex.bar;
-foo = obj.foo + 5
+//let f = object.complex.bar;
+//foo = obj.foo + 5

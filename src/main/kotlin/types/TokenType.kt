@@ -18,5 +18,6 @@ enum class TokenType {
     EQ_GTE,
     EQ_LTE,
     Const,
+    LineTerminatorSequence,
 
 }

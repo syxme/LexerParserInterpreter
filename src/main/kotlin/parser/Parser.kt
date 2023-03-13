@@ -25,9 +25,14 @@ class Parser() {
         return tokens[tokenPosition]
     }
 
-    private fun next(): Token {
+    private fun next(isSkipLine:Boolean = true): Token {
         val prev = at()
         tokenPosition++
+        if (isSkipLine){
+            if (at().type == TokenType.LineTerminatorSequence){
+                next(isSkipLine)
+            }
+        }
         return prev
     }
 
@@ -89,16 +94,7 @@ class Parser() {
 
     }
 
-    private fun parseIfStmt(): Expression {
-        if (next().type != TokenType.OpenParen) {
-            throw Error("Not fond open paren")
-        }
-        return Expression(NodeType.NullLiteral)
-    }
 
-    private fun parserCondExpression() {
-
-    }
 
     private fun parseExpression(): Expression {
         return assign_expression()
@@ -150,7 +146,8 @@ class Parser() {
         val isConst = next().type == TokenType.Const
         val ident = Identifier(next().value)
         except(TokenType.Equals, " Not fond = ")
-        val value = parseStmt()
+        val value = parseExpression()
+        //except(TokenType.SemiColon,"Semicolon not fond")
         return VarDeclaration(ident, value, isConst)
     }
 
@@ -319,11 +316,21 @@ class Parser() {
             TokenType.Number -> {
                 return NumericLiteral(next().value.toInt())
             }
+            TokenType.LineTerminatorSequence ->{
+                next()
+                return LineTerminator()
+            }
 
             TokenType.Null -> {
                 return NullLiteral(next().value)
             }
 
+            TokenType.SemiColon ->{
+                return NullLiteral(next().value)
+            }
+            TokenType.Colon ->{
+                return NullLiteral(next().value)
+            }
             TokenType.OpenParen -> {
                 next()
                 val value = parseExpression()

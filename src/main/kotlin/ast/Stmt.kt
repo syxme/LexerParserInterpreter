@@ -38,6 +38,9 @@ open class NumericLiteral (val value:Int): Expression(NodeType.NumericLiteral){
 open class NullLiteral (val value:String = "null"): Expression(NodeType.NullLiteral){
 
 }
+open class LineTerminator (): Expression(NodeType.NullLiteral){
+
+}
 // foo - bar
 open class Identifier (val symbol:String): Expression(NodeType.Identifier){
 
