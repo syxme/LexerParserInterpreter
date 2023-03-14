@@ -57,8 +57,6 @@ class Parser() {
 
             program.body.add(parseStmt())
         }
-
-
         return program
     }
 
@@ -84,11 +82,9 @@ class Parser() {
             TokenType.Const -> {
                 result = variable_declaration()
             }
-
             TokenType.Return -> {
                 result = return_statement()
             }
-
             TokenType.Function -> {
                 result = function_declaration()
             }

@@ -35,10 +35,26 @@ class Environment(private val parent: Environment? = null) {
         }
         return parent.resolve(name)
     }
+    private fun resolveVariable(name: String): RuntimeVal {
+        val res = variables.get(name)
+        if (res != null) {
+            return res
+        }
+        if (parent == null) {
+            throw Error("Cannot resolve variable $name")
+        }
+        return parent.resolveVariable(name)
+    }
 
     fun getVariable(name: String): RuntimeVal {
-        val env = resolve(name)
-        return env.variables.get(name)!!
+        val res = variables.get(name)
+        if (res != null) {
+            return res
+        }
+        if (parent == null) {
+            throw Error("Cannot resolve variable $name")
+        }
+        return parent.resolveVariable(name)
 
     }
 

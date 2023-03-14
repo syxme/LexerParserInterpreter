@@ -2,8 +2,8 @@ package Runtime
 
 import ast.BlockStatement
 import ast.Expression
-import ast.Stmt
 import environment.Environment
+import java.lang.Float.NaN
 
 enum class ValueType {
     Null,
@@ -33,7 +33,23 @@ open class BooleanVal(var value: Boolean) : RuntimeVal(ValueType.Boolean){
         return value.toString()
     }
 }
-open class NumberVal(val value:Int) : RuntimeVal(ValueType.Number){
+open class NumberVal : RuntimeVal(ValueType.Number){
+    open var value:Number = 0
+}
+open class NaNVal : NumberVal(){
+    override var value:Number = NaN
+}
+open class IntegerVal(override var value:Number) : NumberVal() {
+    override fun toString():String{
+        return value.toString()
+    }
+}
+open class FloatVal(override var value:Number) : NumberVal() {
+    override fun toString():String{
+        return value.toString()
+    }
+}
+open class LongVal(override var value:Number) :  NumberVal(){
     override fun toString():String{
         return value.toString()
     }

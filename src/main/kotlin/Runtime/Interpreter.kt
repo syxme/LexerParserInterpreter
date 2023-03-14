@@ -2,6 +2,7 @@ package Runtime
 
 import ast.*
 import environment.Environment
+import kotlin.reflect.KClass
 
 class Interpreter {
     val root_env = Environment()
@@ -13,7 +14,7 @@ class Interpreter {
 
         val global_System = ObjectVal()
         global_System.properties.set("currentTimeMillis",NativeFunctionVal(NativeFunctionCall { args, env ->
-            return@NativeFunctionCall NumberVal(System.currentTimeMillis().toInt())
+            return@NativeFunctionCall LongVal(System.currentTimeMillis())
         }))
 
         root_env.declareVar("System",global_System,true)
@@ -39,8 +40,8 @@ class Interpreter {
     }
 
     private fun eval_if_statement(statement: IfStatement,env: Environment): RuntimeVal {
-        val test = evaluate(statement.test, env) as NumberVal
-        if (test.value > 0){
+        val test = evaluate(statement.test, env) as IntegerVal
+        if (test.value.toLong() > 0){
             return evaluate(statement.consequent, env)
         }else if (statement.alternate!=null){
             return evaluate(statement.alternate, env)
@@ -54,7 +55,7 @@ class Interpreter {
         val lhs = evaluate(binop.left, env)
         val rhs = evaluate(binop.right, env)
         if (lhs.type == ValueType.Number && rhs.type == ValueType.Number ){
-           return eval_numeric_binary_expr(lhs as NumberVal,rhs as NumberVal,binop.operator)
+           return eval_numeric_binary_expr(lhs as NumberVal ,rhs as NumberVal,binop.operator)
         }
         return NullVal()
     }
@@ -68,33 +69,102 @@ class Interpreter {
         return value
     }
 
-    private fun eqret(bool:Boolean):Int{
-        if (bool){
-            return 1
+    private  fun eqret(bool:Boolean):Int{
+        return if (bool){
+            1
         }else{
-            return 0
+            0
+        }
+    }
+    private  fun eqretF(bool:Boolean):Float{
+        return if (bool){
+            1f
+        }else{
+            0f
+        }
+    }
+    private  fun eqretL(bool:Boolean):Long{
+        return if (bool){
+            1L
+        }else{
+            0L
         }
     }
 
-    private fun eval_numeric_binary_expr(lhs: NumberVal, rhs: NumberVal,operator:String):NumberVal {
+
+    private fun eval_numeric_binary_int(left:Int,right:Int,op:String):IntegerVal{
         var result = 0
-        when (operator){
-            "+" -> {result = lhs.value + rhs.value}
-            "-" -> {result = lhs.value - rhs.value}
-            "*" -> {result = lhs.value * rhs.value}
-            "/" -> {result = lhs.value / rhs.value}
-            "%" -> {result = lhs.value % rhs.value}
-            ">" -> {result = eqret(lhs.value > rhs.value)}
-            "<" -> {result = eqret(lhs.value < rhs.value)}
-            ">=" -> {result = eqret(lhs.value >= rhs.value)}
-            "<=" -> {result = eqret(lhs.value <= rhs.value)}
-            "!=" -> {result = eqret(lhs.value != rhs.value)}
-            "==" -> {result = eqret(lhs.value == rhs.value)}
+        when (op){
+            "+" -> {result = left + right}
+            "-" -> {result = left - right}
+            "*" -> {result = left * right}
+            "/" -> {result = left / right}
+            "%" -> {result = left % right}
+            ">" -> {result = eqret(left > right)}
+            "<" -> {result = eqret(left < right)}
+            ">=" -> {result = eqret(left >= right)}
+            "<=" -> {result = eqret(left <= right)}
+            "!=" -> {result = eqret(left != right)}
+            "==" -> {result = eqret(left == right)}
             else->{
-                throw Error("Undef operator $operator")
+                throw Error("Undef operator $op")
             }
         }
-        return NumberVal(result)
+        return IntegerVal(result)
+    }
+    private fun eval_numeric_binary_long(left:Long,right:Long,op:String):LongVal{
+        var result = 0L
+        when (op){
+            "+" -> {result = left + right}
+            "-" -> {result = left - right}
+            "*" -> {result = left * right}
+            "/" -> {result = left / right}
+            "%" -> {result = left % right}
+            ">" -> {result = eqretL(left > right)}
+            "<" -> {result = eqretL(left < right)}
+            ">=" -> {result = eqretL(left >= right)}
+            "<=" -> {result = eqretL(left <= right)}
+            "!=" -> {result = eqretL(left != right)}
+            "==" -> {result = eqretL(left == right)}
+            else->{
+                throw Error("Undef operator $op")
+            }
+        }
+        return LongVal(result)
+    }
+    private fun eval_numeric_binary_float(left:Float,right:Float,op:String):FloatVal{
+        var result = 0f
+        when (op){
+            "+" -> {result = left + right}
+            "-" -> {result = left - right}
+            "*" -> {result = left * right}
+            "/" -> {result = left / right}
+            "%" -> {result = left % right}
+            ">" -> {result = eqretF(left > right)}
+            "<" -> {result = eqretF(left < right)}
+            ">=" -> {result = eqretF(left >= right)}
+            "<=" -> {result = eqretF(left <= right)}
+            "!=" -> {result = eqretF(left != right)}
+            "==" -> {result = eqretF(left == right)}
+            else->{
+                throw Error("Undef operator $op")
+            }
+        }
+        return FloatVal(result)
+    }
+
+    private fun eval_numeric_binary_expr(lhs: NumberVal, rhs: NumberVal, operator:String):NumberVal {
+        var left:Number
+        if (lhs is LongVal){
+            return eval_numeric_binary_long(lhs.value.toLong(),rhs.value.toLong(),operator)
+        }else if (lhs is IntegerVal){
+            return eval_numeric_binary_int(lhs.value.toInt(),rhs.value.toInt(),operator)
+        }else if (lhs is FloatVal){
+            return eval_numeric_binary_float(lhs.value.toFloat(),rhs.value.toFloat(),operator)
+        }
+
+
+        return NaNVal()
     }
 
 
@@ -194,7 +264,7 @@ class Interpreter {
                 return eval_var_declaration(astNode as VarDeclaration,env)
             }
             NodeType.NumericLiteral -> {
-                return NumberVal((astNode as NumericLiteral).value)
+                return IntegerVal((astNode as NumericLiteral).value)
             }
             NodeType.Program ->{
                 return eval_program_expr(astNode as Program,env)
