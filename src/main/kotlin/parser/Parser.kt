@@ -12,11 +12,16 @@ class Parser() {
         return at().type != TokenType.EOF
     }
 
-    private fun except(type: TokenType, message: String):Token {
-        val prev = next()
-        if (prev.type != type) {
+    private fun except(type: TokenType, message: String): Token {
+        val current = at()
+        val prev = next(true)
+
+        val res = (prev.type == type) or (current.type == type)
+
+        if (!res) {
             throw Error(message)
         }
+
         return prev
     }
 
@@ -24,12 +29,14 @@ class Parser() {
         return tokens[tokenPosition]
     }
 
-    private fun next(isSkipLine:Boolean = true): Token {
-        val prev = at()
+    private fun next(isOverrideValue: Boolean = false): Token {
+        var prev = at()
         tokenPosition++
-        if (isSkipLine){
-            if (at().type == TokenType.LineTerminatorSequence){
-                next(isSkipLine)
+
+        if (at().type == TokenType.LineTerminatorSequence) {
+            val overrideVal = next(isOverrideValue)
+            if (isOverrideValue) {
+                prev = overrideVal
             }
         }
         return prev
@@ -55,26 +62,35 @@ class Parser() {
         return program
     }
 
-    private fun parseProgram(){
+    private fun parseProgram() {
 
     }
 
-    private fun parseBlockStatement():BlockStatement{
+    private fun parseBlockStatement(): BlockStatement {
         val block = BlockStatement()
-        except(TokenType.OpenBrace,"NotFond Open brace statement")
+        except(TokenType.OpenBrace, "NotFond Open brace statement")
         do {
             block.body.add(parseStmt())
-        } while (next().type!=TokenType.CloseBrace)
+        } while (at().type != TokenType.CloseBrace)
+        except(TokenType.CloseBrace, "NotFond Open brace statement")
         return block
     }
 
     private fun parseStmt(): Stmt {
 
-        var result:Stmt
+        var result: Stmt
         when (at().type) {
             TokenType.Let,
             TokenType.Const -> {
-                result =  variable_declaration()
+                result = variable_declaration()
+            }
+
+            TokenType.Return -> {
+                result = return_statement()
+            }
+
+            TokenType.Function -> {
+                result = function_declaration()
             }
             TokenType.If -> {
                 result = selection_statement()
@@ -84,7 +100,7 @@ class Parser() {
             }
 
             else -> {
-                result =  parseExpression()
+                result = parseExpression()
 
             }
         }
@@ -93,55 +109,65 @@ class Parser() {
 
     }
 
+    private fun return_statement(): Stmt {
+        next() // eat return
+        return ReturnStatement(root_expression())
+    }
 
 
     private fun parseExpression(): Expression {
         return assign_expression()
     }
 
-    private fun assign_expression():Expression{
+    private fun assign_expression(): Expression {
         val left = object_expression()
-        if (at().type == TokenType.Equals){
-             next()
+        if (at().type == TokenType.Equals) {
+            next()
             val value = assign_expression()
-            return Assignment(left,value)
+            return Assignment(left, value)
         }
         return left
     }
 
 
-
-
     private fun object_expression(): Expression {
-        if (at().type != TokenType.OpenBrace){
+        if (at().type != TokenType.OpenBrace) {
             return root_expression()
         }
         val rootObject = ObjectLiteral()
         next() // eat {
-        while (isNotEOF() && at().type != TokenType.CloseBrace){
-            val key = except(TokenType.Identifier,"Not fond identifier").value
+        while (isNotEOF() && at().type != TokenType.CloseBrace) {
+            val key = except(TokenType.Identifier, "Not fond identifier").value
 
             // Allows shorthand key: pair -> { key, }
             if (at().type == TokenType.Comma) {
                 next(); // advance past comma
-                rootObject.properties.add(Property(key,NullLiteral()))
+                rootObject.properties.add(Property(key, NullLiteral()))
                 continue
             } // Allows shorthand key: pair -> { key }
             else if (at().type == TokenType.CloseBrace) {
-                rootObject.properties.add(Property(key,NullLiteral()))
+                rootObject.properties.add(Property(key, NullLiteral()))
                 continue
             }
 
-            except(TokenType.Colon,"Missing colon following identifier in ObjectExpr") // :
+            except(TokenType.Colon, "Missing colon following identifier in ObjectExpr") // :
             val value = parseExpression()
-            rootObject.properties.add(Property(key,value))
+            rootObject.properties.add(Property(key, value))
 
             if (at().type != TokenType.CloseBrace) {
-                except(TokenType.Comma,"Expected comma or closing bracket following property")
+                except(TokenType.Comma, "Expected comma or closing bracket following property")
             }
         }
-        except(TokenType.CloseBrace,"Expected comma or closing bracket following property")
+        except(TokenType.CloseBrace, "Expected comma or closing bracket following property")
         return rootObject
+    }
+
+    private fun function_declaration(): Stmt {
+        next()
+        val functionName = Identifier(next().value)
+        val args = parse_arguments()
+        val functionBody = parseBlockStatement()
+        return FunctionDeclaration(functionName, args, functionBody)
     }
 
     private fun variable_declaration(): Stmt {
@@ -307,10 +333,10 @@ class Parser() {
     }
 
     // foo.bar()
-    private fun call_expression():Expression{
+    private fun call_expression(): Expression {
         val left = member_expression()
 
-        if (at().type == TokenType.OpenParen){
+        if (at().type == TokenType.OpenParen) {
             return parse_call_expression(left)
         }
 
@@ -319,59 +345,60 @@ class Parser() {
 
     // foo.bar(
     // foo.bar(a,b)(b,s)(a)
-    private fun parse_call_expression(member:Expression):Expression{
+    private fun parse_call_expression(member: Expression): Expression {
         val args = parse_arguments()
 
-        var callExpression = CallExpression(member,args)
+        var callExpression = CallExpression(member, args)
 
-        if (at().type == TokenType.OpenParen){
+        if (at().type == TokenType.OpenParen) {
             return parse_call_expression(callExpression)
         }
         return callExpression
     }
-    private fun parse_arguments():ArrayList<Expression>{
-        except(TokenType.OpenParen,"")
+
+    private fun parse_arguments(): ArrayList<Expression> {
+        except(TokenType.OpenParen, "")
         val args = ArrayList<Expression>()
-        if (at().type != TokenType.CloseParen){
-           parse_argument_list(args)
+        if (at().type != TokenType.CloseParen) {
+            parse_argument_list(args)
         }
-        except(TokenType.CloseParen,"")
+        except(TokenType.CloseParen, "")
         return args
 
     }
 
-    private fun parse_argument_list(list:ArrayList<Expression>){
+    private fun parse_argument_list(list: ArrayList<Expression>) {
         list.add(root_expression())
-        while (at().type == TokenType.Comma ){
+        while (at().type == TokenType.Comma) {
             next()//eat ,
             list.add(root_expression())
         }
     }
 
     //foo.bar
-    private fun member_expression():Expression{
+    private fun member_expression(): Expression {
         var left = primary_expression()
 
-        while (at().type == TokenType.Dot || at().type == TokenType.OpenBracket){
+        while (at().type == TokenType.Dot || at().type == TokenType.OpenBracket) {
             val operator = next().type // eat . or [
 
-            val right:Expression
+            val right: Expression
             var computed = false
 
-            if (operator == TokenType.Dot){
+            if (operator == TokenType.Dot) {
                 computed = true
                 right = primary_expression()
 
-                if (right.kind != NodeType.Identifier){
+                if (right.kind != NodeType.Identifier) {
                     throw Error("Property only identifer")
                 }
-            }else{
+            } else {
 
                 right = root_expression()
-                except(TokenType.CloseBracket,"Not fond close bracket")
+                except(TokenType.CloseBracket, "Not fond close bracket")
             }
 
-            left = MemberExpression(left,right,computed)
+            left = MemberExpression(left, right, computed)
 
         }
 
@@ -381,6 +408,7 @@ class Parser() {
 
     private fun primary_expression(): Expression {
         val tk = at().type
+        println("TOKEN:" + tk)
         when (tk) {
 
 
@@ -391,7 +419,8 @@ class Parser() {
             TokenType.Number -> {
                 return NumericLiteral(next().value.toInt())
             }
-            TokenType.LineTerminatorSequence ->{
+
+            TokenType.LineTerminatorSequence -> {
                 next()
                 return LineTerminator()
             }
@@ -400,12 +429,14 @@ class Parser() {
                 return NullLiteral(next().value)
             }
 
-            TokenType.SemiColon ->{
+            TokenType.SemiColon -> {
                 return NullLiteral(next().value)
             }
-            TokenType.Colon ->{
+
+            TokenType.Colon -> {
                 return NullLiteral(next().value)
             }
+
             TokenType.OpenParen -> {
                 next()
                 val value = parseExpression()

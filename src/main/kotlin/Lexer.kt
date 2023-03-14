@@ -9,6 +9,8 @@ class Lexer {
         set("null", TokenType.Null)
         set("if", TokenType.If)
         set("else", TokenType.Else)
+        set("function", TokenType.Function)
+        set("return", TokenType.Return)
     }
 
 

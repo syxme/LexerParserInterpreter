@@ -3,6 +3,7 @@ package types
 enum class TokenType {
     Number, Identifier, Equals, OpenParen, CloseParen, BinaryOperator, Let, EOF,Null,
     If,
+    Function,
     Else,
     OpenBrace,
     CloseBrace,
@@ -22,5 +23,6 @@ enum class TokenType {
     Dot,
     OpenBracket,
     CloseBracket,
+    Return,
 
 }

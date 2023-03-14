@@ -9,9 +9,11 @@ enum class NodeType {
     IfStatement,
     VarDeclaration,
     BlockStatement,
+    ReturnStatement,
     Assignment,
     Property,
     ObjectLiteral,
     MemberExpression,
-    CallExpression
+    CallExpression,
+    FunctionDeclaration
 }

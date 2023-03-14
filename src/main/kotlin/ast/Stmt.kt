@@ -40,6 +40,9 @@ open class BlockStatement:Stmt(NodeType.BlockStatement) {
 }
 open class Assignment(val assign: Expression,val value:Expression):Expression(NodeType.Assignment)
 open class VarDeclaration(val identifier: Identifier,val value:Stmt,  val isConstant:Boolean):Stmt(NodeType.VarDeclaration)
+open class FunctionDeclaration(val identifier: Identifier,val arguments:ArrayList<Expression>, val body:BlockStatement):Stmt(NodeType.FunctionDeclaration)
+
+open class ReturnStatement(val result: Expression):Expression(NodeType.ReturnStatement)
 
 
 open class IfStatement(val test:Expression,val consequent:Stmt,val alternate:Stmt?):Expression(NodeType.IfStatement)

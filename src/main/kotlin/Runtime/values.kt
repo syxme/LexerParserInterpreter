@@ -1,19 +1,26 @@
 package Runtime
 
+import ast.BlockStatement
 import ast.Expression
+import ast.Stmt
 import environment.Environment
 
 enum class ValueType {
     Null,
+
     Number,
     Expression,
     Boolean,
     Object,
-    NativeFunction
+    NativeFunction,
+    RuntimeFunction,
+    ReturnValue
 }
 
 
 open class RuntimeVal(val type: ValueType)
+open class ReturnVal(val value: RuntimeVal):RuntimeVal(ValueType.ReturnValue)
+
 
 open class NullVal : RuntimeVal(ValueType.Null){
     val value = "null"
@@ -49,3 +56,6 @@ fun interface NativeFunctionCall{
     fun call(args:ArrayList<RuntimeVal>,env: Environment):RuntimeVal
 }
 open class NativeFunctionVal(val call: NativeFunctionCall):RuntimeVal(ValueType.NativeFunction)
+
+
+open class RuntimeFunctionVal(val arguments:ArrayList<Expression>, val body: BlockStatement):RuntimeVal(ValueType.RuntimeFunction)

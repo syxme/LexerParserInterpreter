@@ -4,6 +4,7 @@ import Runtime.NullVal
 import environment.Environment
 import parser.Parser
 import java.io.*
+import java.lang.Error
 import java.lang.Exception
 import java.util.*
 
@@ -13,6 +14,10 @@ fun main(args: Array<String>) {
 
 
     val interpreter = Interpreter()
+
+
+
+    try {
 
 
     val program = Parser().produceAst(getResourceString("source.js"))
@@ -31,7 +36,10 @@ fun main(args: Array<String>) {
             println("result = $reslt")
         }catch (e:Exception){}
     }
-
+    }catch (e:Error){
+        e.printStackTrace()
+        System.exit(0)
+    }
 }
 
 

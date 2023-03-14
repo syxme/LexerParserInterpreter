@@ -115,11 +115,20 @@ class Interpreter {
     }
     private fun eval_block_statement(block: BlockStatement, env: Environment): RuntimeVal {
         val newEnv = Environment(env)
+
         var lastEval:RuntimeVal = NullVal()
         for (statement in block.body){
             lastEval = evaluate(statement, newEnv)
+            if (lastEval is ReturnVal){
+                return lastEval.value
+            }
         }
         return lastEval
+    }
+
+    private fun eval_function_declaration(func: FunctionDeclaration, env: Environment): RuntimeVal {
+        val name = func.identifier.symbol
+        return env.declareVar(name, RuntimeFunctionVal(func.arguments,func.body),false)
     }
 
 
@@ -137,6 +146,16 @@ class Interpreter {
 
         return root
     }
+
+
+    private fun compute_args_to_env(args_names:ArrayList<Expression>,args_values:ArrayList<RuntimeVal>, env: Environment){
+
+        for ( i in 0 until args_names.size){
+            val name = (args_names[i] as Identifier).symbol
+            env.declareVar(name,args_values[i],false)
+        }
+    }
+
     private fun eval_call(callExpression: CallExpression, env: Environment): RuntimeVal {
         val function = evaluate(callExpression.callee,env)
         val args = ArrayList<RuntimeVal>()
@@ -144,11 +163,23 @@ class Interpreter {
             args.add(evaluate(arg,env))
         }
 
-        if (function.type != ValueType.NativeFunction){
+        if (function is NativeFunctionVal){
+            return (function as NativeFunctionVal).call.call(args,env)
+        }else if (function is RuntimeFunctionVal){
+
+            val newEnv = Environment(env)
+            compute_args_to_env(function.arguments,args,newEnv)
+            return evaluate(function.body,newEnv)
+        }else{
             throw Error("bad function name")
         }
-       return (function as NativeFunctionVal).call.call(args,env)
+
+
     }
+    private fun eval_return(returnStatement: ReturnStatement, env: Environment): RuntimeVal {
+        return evaluate(returnStatement,env)
+    }
+
 
     fun evaluate(astNode: Stmt, env: Environment):RuntimeVal{
         when (astNode.kind){
@@ -180,8 +211,16 @@ class Interpreter {
             NodeType.BlockStatement ->{
                 return eval_block_statement(astNode as BlockStatement,env)
             }
+
+            NodeType.FunctionDeclaration ->{
+                return eval_function_declaration(astNode as FunctionDeclaration,env)
+            }
             NodeType.MemberExpression ->{
                 return eval_member_expression(astNode as MemberExpression,env)
+            }
+
+            NodeType.ReturnStatement ->{
+                return ReturnVal(evaluate(((astNode as ReturnStatement).result ) as Stmt,env))
             }
             NodeType.CallExpression ->{
                 return eval_call(astNode as CallExpression,env)
@@ -196,6 +235,8 @@ class Interpreter {
         }
         return NullVal()
     }
+
+
 
     private fun eval_member_expression(member: MemberExpression, env: Environment): RuntimeVal {
         val obj = evaluate(member.obj,env)
