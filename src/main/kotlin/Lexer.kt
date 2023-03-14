@@ -4,8 +4,8 @@ import types.TokenType
 class Lexer {
 
     val KEYWORDS = HashMap<String, TokenType>().apply {
-        set("let", TokenType.Let)
-        set("const", TokenType.Const)
+        set("var", TokenType.VAR)
+        set("val", TokenType.VAL)
         set("null", TokenType.Null)
         set("if", TokenType.If)
         set("else", TokenType.Else)

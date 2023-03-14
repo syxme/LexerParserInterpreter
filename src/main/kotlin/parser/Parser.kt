@@ -78,8 +78,8 @@ class Parser() {
 
         var result: Stmt
         when (at().type) {
-            TokenType.Let,
-            TokenType.Const -> {
+            TokenType.VAR,
+            TokenType.VAL -> {
                 result = variable_declaration()
             }
             TokenType.Return -> {
@@ -167,7 +167,7 @@ class Parser() {
     }
 
     private fun variable_declaration(): Stmt {
-        val isConst = next().type == TokenType.Const
+        val isConst = next().type == TokenType.VAL
         val ident = Identifier(next().value)
         except(TokenType.Equals, " Not fond = ")
         val value = parseExpression()

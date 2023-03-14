@@ -1,7 +1,7 @@
 package types
 
 enum class TokenType {
-    Number, Identifier, Equals, OpenParen, CloseParen, BinaryOperator, Let, EOF,Null,
+    Number, Identifier, Equals, OpenParen, CloseParen, BinaryOperator, VAR, EOF,Null,
     If,
     Function,
     Else,
@@ -18,11 +18,11 @@ enum class TokenType {
 
     EQ_GTE,
     EQ_LTE,
-    Const,
     LineTerminatorSequence,
     Dot,
     OpenBracket,
     CloseBracket,
     Return,
+    VAL,
 
 }

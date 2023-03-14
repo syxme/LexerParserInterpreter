@@ -1,7 +1,4 @@
-import Runtime.BooleanVal
 import Runtime.Interpreter
-import Runtime.NullVal
-import environment.Environment
 import parser.Parser
 import java.io.*
 import java.lang.Error
@@ -20,7 +17,7 @@ fun main(args: Array<String>) {
     try {
 
 
-    val program = Parser().produceAst(getResourceString("source.js"))
+    val program = Parser().produceAst(getResourceString("source.kt"))
     val reslt = interpreter.execute(program)
     println("result = $reslt")
     val input = Scanner(System.`in`)
@@ -46,7 +43,7 @@ fun main(args: Array<String>) {
 
 private fun getResourceString(name: String):String{
     val classloader = Thread.currentThread().getContextClassLoader();
-    return convertInputStreamToString(classloader.getResourceAsStream("source.js"))
+    return convertInputStreamToString(classloader.getResourceAsStream("source.kt"))
 }
 @Throws(IOException::class)
 private fun convertInputStreamToString(`is`: InputStream): String {

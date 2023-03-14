@@ -39,7 +39,7 @@ open class BlockStatement:Stmt(NodeType.BlockStatement) {
     val body = ArrayList<Stmt>()
 }
 open class Assignment(val assign: Expression,val value:Expression):Expression(NodeType.Assignment)
-open class VarDeclaration(val identifier: Identifier,val value:Stmt,  val isConstant:Boolean):Stmt(NodeType.VarDeclaration)
+open class VarDeclaration(val identifier: Identifier,Ty,val value:Stmt,  val isConstant:Boolean):Stmt(NodeType.VarDeclaration)
 open class FunctionDeclaration(val identifier: Identifier,val arguments:ArrayList<Expression>, val body:BlockStatement):Stmt(NodeType.FunctionDeclaration)
 
 open class ReturnStatement(val result: Expression):Expression(NodeType.ReturnStatement)
