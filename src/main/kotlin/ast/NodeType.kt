@@ -11,5 +11,7 @@ enum class NodeType {
     BlockStatement,
     Assignment,
     Property,
-    ObjectLiteral
+    ObjectLiteral,
+    MemberExpression,
+    CallExpression
 }

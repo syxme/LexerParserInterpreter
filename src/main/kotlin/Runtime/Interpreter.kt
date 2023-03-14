@@ -4,8 +4,33 @@ import ast.*
 import environment.Environment
 
 class Interpreter {
+    val root_env = Environment()
+    init {
 
-    fun eval_program_expr(program:Program,env: Environment):RuntimeVal{
+        root_env.declareVar("true", BooleanVal(true), true)
+        root_env.declareVar("false", BooleanVal(false), true)
+        root_env.declareVar("null", NullVal(), true)
+
+        val global_System = ObjectVal()
+        global_System.properties.set("currentTimeMillis",NativeFunctionVal(NativeFunctionCall { args, env ->
+            return@NativeFunctionCall NumberVal(System.currentTimeMillis().toInt())
+        }))
+
+        root_env.declareVar("System",global_System,true)
+        root_env.declareVar("print",NativeFunctionVal(NativeFunctionCall { args, env ->
+            println("func:print::"+args)
+            return@NativeFunctionCall NullVal()
+        }),true)
+
+
+    }
+
+
+    fun execute(program: Program):RuntimeVal{
+        return evaluate(program,root_env)
+    }
+
+    private fun eval_program_expr(program:Program,env: Environment):RuntimeVal{
         var lastEval:RuntimeVal = NullVal()
         for (statement in program.body){
             lastEval = evaluate(statement, env)
@@ -25,7 +50,7 @@ class Interpreter {
 
     }
 
-    fun eval_binary_expr(binop:BinaryExpression,env: Environment):RuntimeVal{
+    private fun eval_binary_expr(binop:BinaryExpression,env: Environment):RuntimeVal{
         val lhs = evaluate(binop.left, env)
         val rhs = evaluate(binop.right, env)
         if (lhs.type == ValueType.Number && rhs.type == ValueType.Number ){
@@ -112,6 +137,18 @@ class Interpreter {
 
         return root
     }
+    private fun eval_call(callExpression: CallExpression, env: Environment): RuntimeVal {
+        val function = evaluate(callExpression.callee,env)
+        val args = ArrayList<RuntimeVal>()
+        for (arg in callExpression.arguments){
+            args.add(evaluate(arg,env))
+        }
+
+        if (function.type != ValueType.NativeFunction){
+            throw Error("bad function name")
+        }
+       return (function as NativeFunctionVal).call.call(args,env)
+    }
 
     fun evaluate(astNode: Stmt, env: Environment):RuntimeVal{
         when (astNode.kind){
@@ -143,17 +180,46 @@ class Interpreter {
             NodeType.BlockStatement ->{
                 return eval_block_statement(astNode as BlockStatement,env)
             }
+            NodeType.MemberExpression ->{
+                return eval_member_expression(astNode as MemberExpression,env)
+            }
+            NodeType.CallExpression ->{
+                return eval_call(astNode as CallExpression,env)
+            }
             NodeType.NullLiteral -> {
                 return NullVal()
             }
             else -> {
-                throw Error("AST Error not eval statement ${astNode.kind}")
+                throw Error("AST Error not eval statement ${astNode.kind} ${astNode}")
 
             }
         }
         return NullVal()
     }
 
+    private fun eval_member_expression(member: MemberExpression, env: Environment): RuntimeVal {
+        val obj = evaluate(member.obj,env)
+
+        if (obj.type != ValueType.Object){
+            throw Error("$member not object")
+        }
+
+        var property = if (member.computed){
+            (member.property as Identifier).symbol
+        }else{
+            evaluate(member.property,env).toString()
+        }
+
+
+
+        val result = (obj as ObjectVal).properties.get(property)
+        if (result == null){
+            return NullVal()
+        }
+
+        return result
+
+    }
 
 
 }

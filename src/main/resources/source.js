@@ -8,6 +8,6 @@ let obj = {
     bar: true,
   },
 }
-
+print(System.currentTimeMillis())
 //let f = object.complex.bar;
 //foo = obj.foo + 5

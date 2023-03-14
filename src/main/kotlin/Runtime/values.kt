@@ -1,13 +1,15 @@
 package Runtime
 
 import ast.Expression
+import environment.Environment
 
 enum class ValueType {
     Null,
     Number,
     Expression,
     Boolean,
-    Object
+    Object,
+    NativeFunction
 }
 
 
@@ -43,3 +45,7 @@ open class ObjectVal() : RuntimeVal(ValueType.Object){
         return properties.toString()
     }
 }
+fun interface NativeFunctionCall{
+    fun call(args:ArrayList<RuntimeVal>,env: Environment):RuntimeVal
+}
+open class NativeFunctionVal(val call: NativeFunctionCall):RuntimeVal(ValueType.NativeFunction)

@@ -19,5 +19,8 @@ enum class TokenType {
     EQ_LTE,
     Const,
     LineTerminatorSequence,
+    Dot,
+    OpenBracket,
+    CloseBracket,
 
 }

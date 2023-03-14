@@ -4,7 +4,6 @@ import Lexer
 import ast.*
 import types.Token
 import types.TokenType
-import java.util.Properties
 
 class Parser() {
     private var tokens = ArrayList<Token>()
@@ -110,9 +109,12 @@ class Parser() {
         return left
     }
 
+
+
+
     private fun object_expression(): Expression {
         if (at().type != TokenType.OpenBrace){
-            return shift_expression()
+            return root_expression()
         }
         val rootObject = ObjectLiteral()
         next() // eat {
@@ -227,7 +229,7 @@ class Parser() {
     | <relational-expression> >= <shift-expression>
      */
     private fun relational_expression(): Expression {
-        var left = shift_expression()
+        var left = root_expression()
 
         while (at().value == "<" || at().value == ">" || at().value == ">=" || at().value == "<=") {
             val operator = next().value
@@ -244,12 +246,12 @@ class Parser() {
     | <shift-expression> << <additive-expression>
     | <shift-expression> >> <additive-expression>
      */
-    private fun shift_expression(): Expression {
+    private fun root_expression(): Expression {
         var left = additive_expression()
 
         while (at().value == "<<" || at().value == ">>") {
             val operator = next().value
-            val right = shift_expression()
+            val right = root_expression()
 
             left = BinaryExpression(left, right, operator)
         }
@@ -293,15 +295,88 @@ class Parser() {
     | <multiplicative-expression> % <cast-expression>
      */
     private fun multiplicative_expression(): Expression {
-        var left = primary_expression()
+        var left = call_expression()
 
         while (at().value == "/" || at().value == "*" || at().value == "%") {
             val operator = next().value
-            val right = primary_expression()
+            val right = call_expression()
 
             left = BinaryExpression(left, right, operator)
         }
         return left
+    }
+
+    // foo.bar()
+    private fun call_expression():Expression{
+        val left = member_expression()
+
+        if (at().type == TokenType.OpenParen){
+            return parse_call_expression(left)
+        }
+
+        return left
+    }
+
+    // foo.bar(
+    // foo.bar(a,b)(b,s)(a)
+    private fun parse_call_expression(member:Expression):Expression{
+        val args = parse_arguments()
+
+        var callExpression = CallExpression(member,args)
+
+        if (at().type == TokenType.OpenParen){
+            return parse_call_expression(callExpression)
+        }
+        return callExpression
+    }
+    private fun parse_arguments():ArrayList<Expression>{
+        except(TokenType.OpenParen,"")
+        val args = ArrayList<Expression>()
+        if (at().type != TokenType.CloseParen){
+           parse_argument_list(args)
+        }
+        except(TokenType.CloseParen,"")
+        return args
+
+    }
+
+    private fun parse_argument_list(list:ArrayList<Expression>){
+        list.add(root_expression())
+        while (at().type == TokenType.Comma ){
+            next()//eat ,
+            list.add(root_expression())
+        }
+    }
+
+    //foo.bar
+    private fun member_expression():Expression{
+        var left = primary_expression()
+
+        while (at().type == TokenType.Dot || at().type == TokenType.OpenBracket){
+            val operator = next().type // eat . or [
+
+            val right:Expression
+            var computed = false
+
+            if (operator == TokenType.Dot){
+                computed = true
+                right = primary_expression()
+
+                if (right.kind != NodeType.Identifier){
+                    throw Error("Property only identifer")
+                }
+            }else{
+
+                right = root_expression()
+                except(TokenType.CloseBracket,"Not fond close bracket")
+            }
+
+            left = MemberExpression(left,right,computed)
+
+        }
+
+        return left
+
     }
 
     private fun primary_expression(): Expression {

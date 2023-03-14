@@ -66,6 +66,12 @@ class Lexer {
                 '}' -> {
                     tokens.add(Token(c.toString(), TokenType.CloseBrace))
                 }
+                '[' -> {
+                    tokens.add(Token(c.toString(), TokenType.OpenBracket))
+                }
+                ']' -> {
+                    tokens.add(Token(c.toString(), TokenType.CloseBracket))
+                }
 
                 '>' -> {
                     if (isNext('>')){
@@ -101,7 +107,7 @@ class Lexer {
                 }
 
                 '\n' ->{
-                    tokens.add(Token(c.toString(), TokenType.LineTerminatorSequence))
+                    tokens.add(Token("n", TokenType.LineTerminatorSequence))
                 }
 
                 ';' -> {
@@ -113,6 +119,10 @@ class Lexer {
                 ',' -> {
                     tokens.add(Token(c.toString(), TokenType.Comma))
                 }
+                '.' -> {
+                    tokens.add(Token(c.toString(), TokenType.Dot))
+                }
+
 
                 else -> {
                     if (c.isDigit()) {

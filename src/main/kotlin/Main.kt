@@ -4,28 +4,32 @@ import Runtime.NullVal
 import environment.Environment
 import parser.Parser
 import java.io.*
+import java.lang.Exception
 import java.util.*
 
 
 fun main(args: Array<String>) {
 
 
-    val env = Environment()
-    env.declareVar("true", BooleanVal(true), true)
-    env.declareVar("false", BooleanVal(false), true)
-    env.declareVar("null", NullVal(), true)
+
+    val interpreter = Interpreter()
 
 
     val program = Parser().produceAst(getResourceString("source.js"))
-    val reslt = Interpreter().evaluate(program,env)
+    val reslt = interpreter.execute(program)
     println("result = $reslt")
     val input = Scanner(System.`in`)
     while (true) {
-        val line: String = input.nextLine()
-        val program = Parser().produceAst(line)
-        val reslt = Interpreter().evaluate(program,env)
-        println("program = $program")
-        println("result = $reslt")
+
+        try {
+
+
+            val line: String = input.nextLine()
+            val program = Parser().produceAst(line)
+            val reslt = interpreter.execute(program)
+            println("program = $program")
+            println("result = $reslt")
+        }catch (e:Exception){}
     }
 
 }
