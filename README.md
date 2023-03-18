@@ -1,4 +1,4 @@
-# LexerParserInterpriter
+# LexerParserInterpreter
 
 
 My version of interpreter by lessons https://www.youtube.com/@tylerlaceby
